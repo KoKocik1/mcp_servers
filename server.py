@@ -7,7 +7,7 @@ import os
 mcp = FastMCP("ShellServer")
 
 
-@mcp.resource("mcp://readme")
+@mcp.resource("file://mcpreadme")
 def get_mcp_readme() -> str:
     """Get the contents of the MCP README file.
 
