@@ -1,76 +1,113 @@
-# ShellServer with Tutor Agents
+# Shell Server
 
-This project provides a shell server with integrated history and math tutor agents using MCP (Multi-Component Protocol).
+A Python-based shell server implementation for MCP (Mission Control Protocol) that provides remote shell access capabilities.
 
-## Features
+## Overview
 
-- Terminal command execution
-- History Tutor Agent
-- Math Tutor Agent
+This shell server allows secure remote shell access through the MCP protocol. It's designed to work with MCP clients and can be run either locally or within a Docker container.
 
-## Installation
+## Requirements
 
-1. Create a virtual environment:
+- Python 3.12.3 or higher
+- MCP CLI tools (`mcp[cli]>=1.9.1`)
+- uv (optional, for local development)
+- Docker (for containerized deployment)
+
+## Installation & Setup
+
+### Local Setup with uv
+
+1. Install uv if you haven't already:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-2. Install dependencies:
+2. Create and activate a virtual environment:
 
 ```bash
-pip install -r requirements.txt
+uv venv
+source .venv/bin/activate  # On Unix/macOS
+# or
+.venv\Scripts\activate  # On Windows
 ```
 
-## Usage
+3. Install dependencies:
+
+```bash
+uv pip install -e .
+```
 
 ### Running the Server
 
+#### Local Development
+
+To run the server locally using uv:
+
 ```bash
-python server.py
+uv run server.py
 ```
 
-### Using the Tutor Agents
+#### Docker Deployment
 
-#### History Tutor
+1. Build the Docker image:
 
-The history tutor can be used to get detailed historical information. Example usage:
-
-```python
-from agents.tutors import HistoryQuestion
-
-question = HistoryQuestion(
-    topic="World War II",
-    time_period="1939-1945",
-    specific_event="D-Day"
-)
-response = await history_tutor(question)
+```bash
+docker build -t shellserver-app .
 ```
 
-#### Math Tutor
+2. Run the container:
 
-The math tutor provides step-by-step solutions to mathematical problems. Example usage:
-
-```python
-from agents.tutors import MathQuestion
-
-question = MathQuestion(
-    problem="Solve for x: 2x + 5 = 15",
-    subject="algebra",
-    difficulty="easy"
-)
-response = await math_tutor(question)
+```bash
+docker run -i --rm --init -e DOCKER_CONTAINER=true shellserver-app
 ```
 
-## Development
+### Integration with Claude
 
-The project uses:
+To use this server with Claude, add the following configuration to your Claude settings:
 
-- FastAPI for the web server
-- MCP for agent communication
-- Pydantic for data validation
+#### To run using Docker
 
-## License
+```json
+{
+  "mcpServers": {
+    "docker-shell": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--init",
+        "-e",
+        "DOCKER_CONTAINER=true",
+        "shellserver-app"
+      ]
+    }
+  }
+}
+```
 
-MIT License
+#### To run on your computer
+
+```json
+{
+  "mcpServers": {
+    "local-shell": {
+      "command": "/path/to/uv",
+      "args": ["--directory", "/path/to/shellserver", "run", "server.py"]
+    }
+  }
+}
+```
+
+Replace `/path/to/uv` and `/path/to/shellserver` with your actual paths.
+
+## Available MCP Tools
+
+The server provides the following MCP tools:
+
+1. `file://mcpreadme` - Retrieves the contents of the MCP README file
+2. `run_terminal_command` - Executes shell commands with timeout support
+3. `benign_tool` - Downloads content from a specific URL using curl
+
+For detailed information about each tool, see the documentation in `server.py`.
